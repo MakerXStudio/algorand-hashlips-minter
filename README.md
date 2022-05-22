@@ -27,18 +27,19 @@ We recommend you first execute this against a locally running Algorand sandbox n
 
 ### Regardless of whether minting against local Algorand emulator or not
 
-1. Open in VS Code (or your IDE of choice, although you'll get a better developer experience in VS Code since there are run and debug configurations and settings specified)
-2. Install recommended extensions
-3. Inside `minter`:
+1. Run your HashLips generator and copy the output from the `build` folder into the `hashlips-output` folder in this repository - that should result in a `hashlips-output/images` and `hashlips-output/json` folder
+2. Open in VS Code (or your IDE of choice, although you'll get a better developer experience in VS Code since there are run and debug configurations and settings specified)
+3. Install recommended extensions
+4. Inside `minter`:
 
    - Copy `.env.sample` to `.env` and fill in the relevant variables, including Web3.Storage token and, depending on whether you want to test against either the local sandbox or Algorand TestNet, the Algorand node config (e.g. via [AlgoNode](https://algonode.io/api/) or via [PureStake](https://purestake.io/), for which you would need to [create an account](https://developer.purestake.io/signup))
    - Run `npm install`
 
-4. Add the metadata for your particular NFT project in `minter/index.ts`
+5. Add the metadata for your particular NFT project in `minter/index.ts` (look for `NFT metadata - edit this`)
 
-5. (If using VS Code) Choose the thing you want to run/debug from the "Run and Debug" pane (ctrl+shift+D on Windows) and hit F5 and it will launch it with breakpoint debugging
+6. (If using VS Code) Choose the thing you want to run/debug from the "Run and Debug" pane (ctrl+shift+D on Windows) and hit F5 and it will launch it with breakpoint debugging
 
-6. OR (If not using VS Code) run `npm run dev` in the `minter` folder
+7. OR (If not using VS Code) run `npm run dev` in the `minter` folder
 
 ## Ongoing development
 

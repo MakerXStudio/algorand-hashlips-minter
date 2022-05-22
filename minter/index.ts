@@ -1,5 +1,8 @@
 import { Account, Algodv2 } from 'algosdk'
-import fs from 'fs'
+import fsSync from 'fs'
+import fs from 'fs/promises'
+import path from 'path'
+import { getFilesFromPath, Web3Storage } from 'web3.storage'
 import { CREATOR_ACCOUNT } from './constants'
 import { getAccount } from './functions/account'
 import { chunkArray } from './functions/array'
@@ -18,22 +21,47 @@ const mediaType = MediaType.Image
 /**** End of NFT metadata ******/
 /*********************************/
 
-if (!fs.existsSync('.env') && !process.env.ALGOD_SERVER) {
-  console.error('Copy .env.sample to .env before starting the application.')
+if (!fsSync.existsSync('.env') && (!process.env.ALGOD_SERVER || !process.env.WEB3_STORAGE_API_TOKEN)) {
+  console.error('Copy .env.sample to .env and fill in before starting the application.')
   process.exit(1)
 }
 ;(async () => {
   try {
     const client = await getAlgoClient()
+    const storage = new Web3Storage({ token: process.env.WEB3_STORAGE_API_TOKEN! })
     const creatorAccount = await getAccount(client, CREATOR_ACCOUNT)
 
-    // todo: Get HashLips metadata
-    const project = {
-      name: 'PROJECT',
-    }
-    const nftsToMint: NFT[] = []
+    // Upload images to IPFS
+    const cid = await uploadToIPFS(storage, '../hashlips-output/images/')
 
-    console.log(`Minting NFTs for ${project.name}`)
+    // Parse HashLips metadata output
+    const nftsToMint: NFT[] = []
+    const hashLipsOutput = await fs.readdir(path.join(__dirname, '../hashlips-output/json'))
+    for (let metadataFile of hashLipsOutput) {
+      if (metadataFile === '_metadata.json') {
+        continue
+      }
+
+      const metadataJSON = await fs.readFile(path.join(__dirname, '../hashlips-output/json', metadataFile))
+      const metadata = JSON.parse(metadataJSON.toString('utf-8')) as HashLipsMetadata
+
+      const traits: Record<string, string> = {}
+      if (metadata.attributes) {
+        metadata.attributes.forEach((a) => {
+          traits[a.trait_type] = a.value
+        })
+      }
+
+      nftsToMint.push({
+        dna: metadata.dna,
+        imageUrl: metadata.image.replace('ipfs://NewUriToReplace/', `ipfs://${cid}/images/`),
+        name: metadata.name,
+        description: metadata.description,
+        traits: traits,
+      })
+    }
+
+    console.log(`Found ${nftsToMint.length} HashLips generated NFTs`)
 
     const accountInformation = await client.accountInformation(creatorAccount.addr).do()
     const existingAlgorandNFTs = (accountInformation['created-assets'] as AssetResult[]).filter(
@@ -84,6 +112,21 @@ if (!fs.existsSync('.env') && !process.env.ALGOD_SERVER) {
     process.exit(1)
   }
 })()
+interface HashLipsMetadataTrait {
+  trait_type: string
+  value: string
+}
+
+interface HashLipsMetadata {
+  compiler: string
+  date: number
+  description: string
+  dna: string
+  edition: number
+  image: string
+  name: string
+  attributes: HashLipsMetadataTrait[]
+}
 
 interface NFT {
   dna: string
@@ -92,6 +135,11 @@ interface NFT {
   externalUrl?: string
   description?: string
   traits?: Record<string, string>
+}
+
+async function uploadToIPFS(storage: Web3Storage, filePath: string) {
+  const fileRef = await getFilesFromPath(filePath)
+  return await storage.put(fileRef)
 }
 
 async function getAlgorandNFTTransaction(

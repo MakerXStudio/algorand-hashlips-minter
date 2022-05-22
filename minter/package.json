@@ -16,7 +16,8 @@
     "bottleneck": "^2.19.5",
     "decorate-all": "^1.1.1",
     "node-fetch": "^2.6.6",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "web3.storage": "^4.2.0"
   },
   "devDependencies": {
     "@types/async-retry": "^1.4.3",
