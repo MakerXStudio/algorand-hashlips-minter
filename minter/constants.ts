@@ -1,0 +1,2 @@
+export const DISPENSER_ACCOUNT = 'DISPENSER'
+export const CREATOR_ACCOUNT = 'CREATOR'
