@@ -147,8 +147,7 @@ async function getAlgorandNFTTransaction(
   creatorAccount: Account,
   nft: NFT,
   unitName: string,
-  mutableMetadata: boolean,
-  note?: string
+  mutableMetadata: boolean
 ) {
   let mintParameters: CreateAssetParamsBase
   mintParameters = {
@@ -167,7 +166,6 @@ async function getAlgorandNFTTransaction(
       ...{ dna: nft.dna },
     } as any,
     skipSending: true,
-    note: note,
   }
 
   // Create NFT
