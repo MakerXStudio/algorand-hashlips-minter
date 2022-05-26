@@ -15,7 +15,7 @@ import { sendGroupOfTransactions } from './functions/transaction'
 /*********************************/
 /**** NFT metadata - edit this */
 /*********************************/
-const mutableMetadata = false
+const mutableMetadata = true // Set this to false if you don't want the ability to modify (or burn!) the NFTs; if you are experimenting we recommend keeping to true so you don't lock up ALGOs.
 const unitName = 'UNIT'
 const mediaType = MediaType.Image
 /**** End of NFT metadata ******/
