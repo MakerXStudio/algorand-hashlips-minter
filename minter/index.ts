@@ -17,6 +17,7 @@ import { sendGroupOfTransactions } from './functions/transaction'
 /*********************************/
 const mutableMetadata = true // Set this to false if you don't want the ability to modify (or burn!) the NFTs; if you are experimenting we recommend keeping to true so you don't lock up ALGOs.
 const unitName = 'UNIT'
+const appendId = true
 const mediaType = MediaType.Image
 /**** End of NFT metadata ******/
 /*********************************/
@@ -32,17 +33,22 @@ if (!fsSync.existsSync('.env') && (!process.env.ALGOD_SERVER || !process.env.WEB
     const creatorAccount = await getAccount(client, CREATOR_ACCOUNT)
 
     // Upload images to IPFS
-    const cid = await uploadToIPFS(storage, '../hashlips-output/images/')
+    console.time('Uploading images to IPFS...')
+    //const cid = await uploadToIPFS(storage, '../hashlips-output/images/')
+    console.timeEnd('Uploading images to IPFS...')
 
     // Parse HashLips metadata output
     const nftsToMint: NFT[] = []
-    const hashLipsOutput = await fs.readdir(path.join(__dirname, '../hashlips-output/json'))
+    const hashLipsOutput = (await fs.readdir(path.join(__dirname, '../hashlips-output/json')))
+      .map((fileName) => fileName.replace('.json', ''))
+      .sort((a, b) => parseInt(a) - parseInt(b))
+
     for (let metadataFile of hashLipsOutput) {
-      if (metadataFile === '_metadata.json') {
+      if (metadataFile === '_metadata') {
         continue
       }
 
-      const metadataJSON = await fs.readFile(path.join(__dirname, '../hashlips-output/json', metadataFile))
+      const metadataJSON = await fs.readFile(path.join(__dirname, '../hashlips-output/json', `${metadataFile}.json`))
       const metadata = JSON.parse(metadataJSON.toString('utf-8')) as HashLipsMetadata
 
       const traits: Record<string, string> = {}
@@ -58,14 +64,15 @@ if (!fsSync.existsSync('.env') && (!process.env.ALGOD_SERVER || !process.env.WEB
         name: metadata.name,
         description: metadata.description,
         traits: traits,
+        id: metadataFile.padStart((hashLipsOutput.length - 1).toString().length, '0'),
       })
     }
 
     console.log(`Found ${nftsToMint.length} HashLips generated NFTs`)
 
     const accountInformation = await client.accountInformation(creatorAccount.addr).do()
-    const existingAlgorandNFTs = (accountInformation['created-assets'] as AssetResult[]).filter(
-      (a) => a.params['unit-name'] === unitName
+    const existingAlgorandNFTs = (accountInformation['created-assets'] as AssetResult[]).filter((a) =>
+      a.params['unit-name']?.startsWith(unitName)
     )
 
     console.log(`Found ${existingAlgorandNFTs.length} existing NFTs already minted on Algorand`)
@@ -80,7 +87,8 @@ if (!fsSync.existsSync('.env') && (!process.env.ALGOD_SERVER || !process.env.WEB
     for (let batch of batches) {
       const txns = await Promise.all(
         batch.map(
-          async (nft) => await getAlgorandNFTTransaction(client, creatorAccount, nft, unitName, mutableMetadata)
+          async (nft) =>
+            await getAlgorandNFTTransaction(client, creatorAccount, nft, unitName, mutableMetadata, appendId)
         )
       )
 
@@ -135,6 +143,7 @@ interface NFT {
   externalUrl?: string
   description?: string
   traits?: Record<string, string>
+  id: string
 }
 
 async function uploadToIPFS(storage: Web3Storage, filePath: string) {
@@ -147,12 +156,13 @@ async function getAlgorandNFTTransaction(
   creatorAccount: Account,
   nft: NFT,
   unitName: string,
-  mutableMetadata: boolean
+  mutableMetadata: boolean,
+  appendId: boolean
 ) {
   let mintParameters: CreateAssetParamsBase
   mintParameters = {
     assetName: nft.name,
-    unitName: unitName,
+    unitName: `${unitName}${appendId ? nft.id : ''}`,
     creator: creatorAccount,
     managerAddress: mutableMetadata ? creatorAccount.addr : undefined,
     url: nft.imageUrl,
