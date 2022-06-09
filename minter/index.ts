@@ -33,9 +33,15 @@ if (!fsSync.existsSync('.env') && (!process.env.ALGOD_SERVER || !process.env.WEB
     const creatorAccount = await getAccount(client, CREATOR_ACCOUNT)
 
     // Upload images to IPFS
-    console.time('Uploading images to IPFS...')
-    //const cid = await uploadToIPFS(storage, '../hashlips-output/images/')
-    console.timeEnd('Uploading images to IPFS...')
+    let cid = ''
+    if (process.env.IPFS_CID) {
+      cid = process.env.IPFS_CID
+    } else {
+      console.time('Uploading images to IPFS...')
+      cid = await uploadToIPFS(storage, '../hashlips-output/images/')
+      console.timeEnd('Uploading images to IPFS...')
+      console.log(`Uploaded media to IPFS with CID of ${cid}`)
+    }
 
     // Parse HashLips metadata output
     const nftsToMint: NFT[] = []
