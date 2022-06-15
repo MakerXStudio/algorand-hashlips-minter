@@ -23,6 +23,16 @@
       "sourceMapPathOverrides": {
         "route:*": "*" // <-- fix up the paths, so route:<path> just becomes <path>
       }
+    },
+    {
+      "name": "Transfer assets",
+      "request": "launch",
+      "runtimeArgs": ["run-script", "transfer"],
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "pwa-node",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/minter"
     }
   ]
 }

@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "ts-node-dev --transpile-only --watch .env -r dotenv/config ./index.ts",
     "build": "npm run clean && tsc && copyfiles package.json package-lock.json build && cd build && npm ci --production && rimraf package.json package-lock.json",
-    "clean": "rimraf build"
+    "clean": "rimraf build",
+    "transfer": "ts-node-dev --transpile-only --watch .env -r dotenv/config ./scripts/transfer.ts"
   },
   "dependencies": {
     "algosdk": "^1.12.0",
