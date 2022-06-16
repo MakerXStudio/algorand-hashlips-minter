@@ -62,7 +62,7 @@ const transfer = async () => {
     if (assetIds.length === 0) {
       const account = await client.accountInformation(senderAccount.addr).do()
       const assets = account['assets']
-      assetIds.push(...assets.map((a: any) => a['asset-id']))
+      assetIds.push(...assets.filter((a: any) => a.amount > 0).map((a: any) => a['asset-id']))
     }
 
     const assets = await Promise.all(
